@@ -112,7 +112,13 @@ Return ONLY valid JSON matching this exact structure.`
 		const responseContent = completion.choices[0]?.message?.content
 
 		if (!responseContent) {
-			throw new Error('No response from OpenAI')
+			console.error('OpenAI returned empty response:', {
+				choices: completion.choices,
+				finishReason: completion.choices[0]?.finish_reason,
+			})
+			throw new Error(
+				'OpenAI returned an empty response. This is usually temporary - please try again.',
+			)
 		}
 
 		const parsedResponse = JSON.parse(responseContent)
@@ -132,10 +138,24 @@ Return ONLY valid JSON matching this exact structure.`
 		return NextResponse.json(validatedResponse as StrategyResponse)
 	} catch (err) {
 		console.error('Strategy generation error:', err)
+
+		// More detailed error logging
+		if (err instanceof z.ZodError) {
+			console.error('Validation error:', JSON.stringify(err.errors, null, 2))
+			return NextResponse.json(
+				{
+					error: 'Invalid response format from OpenAI',
+					details: err.errors,
+				},
+				{ status: 500 },
+			)
+		}
+
 		return NextResponse.json(
 			{
 				error:
 					err instanceof Error ? err.message : 'Failed to generate strategy',
+				details: err instanceof Error ? err.stack : undefined,
 			},
 			{ status: 500 },
 		)

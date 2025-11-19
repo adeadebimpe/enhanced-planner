@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react'
 import { markets as seedMarkets } from '@/data/markets'
 import type { Scenario, StrategyResponse, MarketData } from '@/lib/types'
 import { Sidebar } from '@/components/sidebar'
+import { TopBar } from '@/components/top-bar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { StrategyPanel } from '@/components/strategy-panel'
 import { MetricCard } from '@/components/metric-card'
 import { SingleRadarChart } from '@/components/single-radar-chart'
-import { TrendingUp, TrendingDown, DollarSign, Users, Loader2, Info } from 'lucide-react'
+import { AiSearchBar } from '@/components/ai-search-bar'
+import { TrendingUp, TrendingDown, DollarSign, Users, Loader2, Info, ArrowLeftRight } from 'lucide-react'
 import {
 	Radar,
 	RadarChart,
@@ -16,6 +19,7 @@ import {
 	PolarAngleAxis,
 	PolarRadiusAxis,
 	ResponsiveContainer,
+	Tooltip as RechartsTooltip,
 } from 'recharts'
 import {
 	Tooltip,
@@ -25,6 +29,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useMarkets } from '@/lib/market-context'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 
 const scenarios: Scenario[] = [
 	'Low Regulation',
@@ -76,7 +81,11 @@ export default function MarketPage () {
 			})
 
 			if (!response.ok) {
-				throw new Error(`Failed to generate strategy for ${market.name}`)
+				const errorData = await response.json().catch(() => ({}))
+				console.error('API Error Response:', errorData)
+				throw new Error(
+					errorData.error || `Failed to generate strategy for ${market.name}`,
+				)
 			}
 
 			const data = await response.json()
@@ -100,9 +109,12 @@ export default function MarketPage () {
 		return (
 			<div className="flex min-h-screen bg-background">
 				<Sidebar />
-				<main className="flex-1 flex items-center justify-center">
-					<p className="text-muted-foreground">Market not found</p>
-				</main>
+				<div className="flex-1 flex flex-col">
+					<TopBar />
+					<main className="flex-1 flex items-center justify-center">
+						<p className="text-muted-foreground">Market not found</p>
+					</main>
+				</div>
 			</div>
 		)
 	}
@@ -111,13 +123,39 @@ export default function MarketPage () {
 		<div className="flex min-h-screen bg-background">
 			<Sidebar />
 
-			<main className="flex-1 overflow-y-auto">
-				<div className="p-8 max-w-7xl mx-auto space-y-8">
-					{/* Header with Scenario Selector */}
-					<div>
-						<h1 className="text-5xl font-bold tracking-tight mb-4">
-							{market.name}
-						</h1>
+			<div className="flex-1 flex flex-col">
+				{/* Top Bar */}
+				<TopBar
+					rightContent={
+						<>
+							<Link href="/compare">
+								<Button variant="outline" size="sm">
+									<ArrowLeftRight className="h-4 w-4 mr-2" />
+									Compare Markets
+								</Button>
+							</Link>
+							<AiSearchBar
+								market={{
+									country: market.name,
+									code: market.name.substring(0, 2).toUpperCase(),
+									population: 0,
+									gdpPerCapita: 0,
+									sportsCulture: 'Custom market - analyzing based on available data',
+									mediaLandscape: 'Custom market - analyzing based on available data',
+									regulationNotes: 'Custom market - analyzing based on available data',
+								}}
+								strategy={strategy}
+							/>
+						</>
+					}
+				/>
+
+				<main className="flex-1 overflow-y-auto">
+					<div className="p-8 max-w-7xl mx-auto space-y-8">
+						{/* Market Title */}
+						<div>
+							<h1 className="text-4xl font-bold tracking-tight">{market.name}</h1>
+						</div>
 
 						{/* Scenario Selector */}
 						<div className="flex gap-2">
@@ -135,7 +173,6 @@ export default function MarketPage () {
 								</button>
 							))}
 						</div>
-					</div>
 
 					{/* Error */}
 					{error && (
@@ -210,114 +247,115 @@ export default function MarketPage () {
 								</div>
 							</TooltipProvider>
 
-							{/* Market Insights */}
-							<Card className="bg-card/50 border-border">
-								<CardHeader className="pb-4">
-									<h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-										Market Insights
-									</h3>
-								</CardHeader>
-								<CardContent>
-									<TooltipProvider>
-										<div className="space-y-0">
-											<div className="flex justify-between items-center py-3 border-b border-border/50">
-												<div className="flex items-center gap-1.5">
-													<span className="text-xs text-muted-foreground">Audience Size</span>
-													<Tooltip>
-														<TooltipTrigger>
-															<Info className="h-3 w-3 text-muted-foreground/50" />
-														</TooltipTrigger>
-														<TooltipContent>
-															<p className="text-xs">Estimated total addressable audience based on cultural fit score</p>
-														</TooltipContent>
-													</Tooltip>
+							{/* Market Insights & Soft Scores */}
+							<div className="grid gap-6 lg:grid-cols-2">
+								{/* Market Insights */}
+								<Card className="bg-card/50 border-border">
+									<CardHeader className="pb-4">
+										<h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+											Market Insights
+										</h3>
+									</CardHeader>
+									<CardContent>
+										<TooltipProvider>
+											<div className="space-y-0">
+												<div className="flex justify-between items-center py-3 border-b border-border/50">
+													<div className="flex items-center gap-1.5">
+														<span className="text-xs text-muted-foreground">Audience Size</span>
+														<Tooltip>
+															<TooltipTrigger>
+																<Info className="h-3 w-3 text-muted-foreground/50" />
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">Estimated total addressable audience based on cultural fit score</p>
+															</TooltipContent>
+														</Tooltip>
+													</div>
+													<span className="font-mono font-semibold text-lg text-foreground">
+														{(strategy.softScores.culturalFit * 0.58).toFixed(1)}M
+													</span>
 												</div>
-												<span className="font-mono font-semibold text-lg text-foreground">
-													{(strategy.softScores.culturalFit * 0.58).toFixed(1)}M
-												</span>
-											</div>
 
-											<div className="flex justify-between items-center py-3 border-b border-border/50">
-												<div className="flex items-center gap-1.5">
-													<span className="text-xs text-muted-foreground">Fitness</span>
-													<Tooltip>
-														<TooltipTrigger>
-															<Info className="h-3 w-3 text-muted-foreground/50" />
-														</TooltipTrigger>
-														<TooltipContent>
-															<p className="text-xs">Projected fitness and sports participation rate</p>
-														</TooltipContent>
-													</Tooltip>
+												<div className="flex justify-between items-center py-3 border-b border-border/50">
+													<div className="flex items-center gap-1.5">
+														<span className="text-xs text-muted-foreground">Fitness</span>
+														<Tooltip>
+															<TooltipTrigger>
+																<Info className="h-3 w-3 text-muted-foreground/50" />
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">Projected fitness and sports participation rate</p>
+															</TooltipContent>
+														</Tooltip>
+													</div>
+													<span className="font-mono font-semibold text-lg text-foreground">
+														{Math.round(strategy.softScores.culturalFit * 5.5)}%
+													</span>
 												</div>
-												<span className="font-mono font-semibold text-lg text-foreground">
-													{Math.round(strategy.softScores.culturalFit * 5.5)}%
-												</span>
-											</div>
 
-											<div className="flex justify-between items-center py-3 border-b border-border/50">
-												<div className="flex items-center gap-1.5">
-													<span className="text-xs text-muted-foreground">Streaming</span>
-													<Tooltip>
-														<TooltipTrigger>
-															<Info className="h-3 w-3 text-muted-foreground/50" />
-														</TooltipTrigger>
-														<TooltipContent>
-															<p className="text-xs">Media potential score for digital streaming platforms</p>
-														</TooltipContent>
-													</Tooltip>
+												<div className="flex justify-between items-center py-3 border-b border-border/50">
+													<div className="flex items-center gap-1.5">
+														<span className="text-xs text-muted-foreground">Streaming</span>
+														<Tooltip>
+															<TooltipTrigger>
+																<Info className="h-3 w-3 text-muted-foreground/50" />
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">Media potential score for digital streaming platforms</p>
+															</TooltipContent>
+														</Tooltip>
+													</div>
+													<span className="font-mono font-semibold text-lg text-foreground">
+														{Math.round(strategy.softScores.mediaPotential * 8.9)}
+													</span>
 												</div>
-												<span className="font-mono font-semibold text-lg text-foreground">
-													{Math.round(strategy.softScores.mediaPotential * 8.9)}
-												</span>
-											</div>
 
-											<div className="flex justify-between items-center py-3 border-b border-border/50">
-												<div className="flex items-center gap-1.5">
-													<span className="text-xs text-muted-foreground">Sponsorship</span>
-													<Tooltip>
-														<TooltipTrigger>
-															<Info className="h-3 w-3 text-muted-foreground/50" />
-														</TooltipTrigger>
-														<TooltipContent>
-															<p className="text-xs">Commercial sponsorship value and brand partnership potential</p>
-														</TooltipContent>
-													</Tooltip>
+												<div className="flex justify-between items-center py-3 border-b border-border/50">
+													<div className="flex items-center gap-1.5">
+														<span className="text-xs text-muted-foreground">Sponsorship</span>
+														<Tooltip>
+															<TooltipTrigger>
+																<Info className="h-3 w-3 text-muted-foreground/50" />
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">Commercial sponsorship value and brand partnership potential</p>
+															</TooltipContent>
+														</Tooltip>
+													</div>
+													<span className="font-mono font-semibold text-lg text-foreground">
+														{Math.round(strategy.softScores.sponsorshipAppetite * 8)}
+													</span>
 												</div>
-												<span className="font-mono font-semibold text-lg text-foreground">
-													{Math.round(strategy.softScores.sponsorshipAppetite * 8)}
-												</span>
-											</div>
 
-											<div className="flex justify-between items-center py-3">
-												<div className="flex items-center gap-1.5">
-													<span className="text-xs text-muted-foreground">Regulation</span>
-													<Tooltip>
-														<TooltipTrigger>
-															<Info className="h-3 w-3 text-muted-foreground/50" />
-														</TooltipTrigger>
-														<TooltipContent>
-															<p className="text-xs">Regulatory environment friendliness score</p>
-														</TooltipContent>
-													</Tooltip>
+												<div className="flex justify-between items-center py-3">
+													<div className="flex items-center gap-1.5">
+														<span className="text-xs text-muted-foreground">Regulation</span>
+														<Tooltip>
+															<TooltipTrigger>
+																<Info className="h-3 w-3 text-muted-foreground/50" />
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">Regulatory environment friendliness score</p>
+															</TooltipContent>
+														</Tooltip>
+													</div>
+													<span className="font-mono font-semibold text-lg text-foreground">
+														{Math.round(strategy.softScores.regulatoryFriendliness * 7.5)}
+													</span>
 												</div>
-												<span className="font-mono font-semibold text-lg text-foreground">
-													{Math.round(strategy.softScores.regulatoryFriendliness * 7.5)}
-												</span>
 											</div>
-										</div>
-									</TooltipProvider>
-								</CardContent>
-							</Card>
+										</TooltipProvider>
+									</CardContent>
+								</Card>
 
-							{/* Soft Scores */}
-							<Card className="bg-card/50 border-border">
-								<CardHeader className="pb-4">
-									<h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-										Soft Scores
-									</h3>
-								</CardHeader>
-								<CardContent>
-									<div className="grid gap-6 lg:grid-cols-2">
+								{/* Soft Scores */}
+								<Card className="bg-card/50 border-border">
+									<CardHeader className="pb-4">
+										<h3 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+											Soft Scores
+										</h3>
+									</CardHeader>
+									<CardContent>
 										{/* Radar Chart */}
 										<ResponsiveContainer width="100%" height={350}>
 											<RadarChart data={[
@@ -339,10 +377,7 @@ export default function MarketPage () {
 												<PolarRadiusAxis
 													angle={90}
 													domain={[0, 10]}
-													tick={{
-														fill: 'hsl(var(--muted-foreground))',
-														fontSize: 10,
-													}}
+													tick={false}
 													axisLine={false}
 												/>
 												<Radar
@@ -357,25 +392,21 @@ export default function MarketPage () {
 														r: 4,
 													}}
 												/>
+												<RechartsTooltip
+													contentStyle={{
+														backgroundColor: 'hsl(var(--card))',
+														border: '1px solid hsl(var(--border))',
+														borderRadius: '6px',
+														padding: '8px 12px',
+														color: 'hsl(var(--foreground))',
+													}}
+													formatter={(value: number) => [value.toFixed(1), 'Score']}
+												/>
 											</RadarChart>
 										</ResponsiveContainer>
-
-										{/* Scores List */}
-										<div className="space-y-0">
-											{Object.entries(strategy.softScores).map(([key, value]) => (
-												<div key={key} className="flex justify-between items-center py-3 border-b border-border/50 last:border-0">
-													<span className="text-xs text-muted-foreground capitalize">
-														{key.replace(/([A-Z])/g, ' $1').trim()}
-													</span>
-													<span className="font-mono font-semibold text-lg text-foreground">
-														{value.toFixed(1)}
-													</span>
-												</div>
-											))}
-										</div>
-									</div>
-								</CardContent>
-							</Card>
+									</CardContent>
+								</Card>
+							</div>
 
 							{/* Strategy Panel */}
 							<StrategyPanel
@@ -386,15 +417,16 @@ export default function MarketPage () {
 						</div>
 					)}
 
-					{/* Footer */}
-					<div className="pt-8 border-t border-border/50 text-center text-xs text-muted-foreground">
-						<p>
-							Powered by OpenAI GPT-4 • Market data from official sources •
-							AI-generated strategic analysis
-						</p>
+						{/* Footer */}
+						<div className="pt-8 border-t border-border/50 text-center text-xs text-muted-foreground">
+							<p>
+								Powered by OpenAI GPT-4 • Market data from official sources •
+								AI-generated strategic analysis
+							</p>
+						</div>
 					</div>
-				</div>
-			</main>
+				</main>
+			</div>
 		</div>
 	)
 }

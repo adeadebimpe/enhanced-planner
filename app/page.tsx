@@ -1,6 +1,7 @@
 'use client'
 
 import { Sidebar } from '@/components/sidebar'
+import { TopBar } from '@/components/top-bar'
 import { Card, CardContent } from '@/components/ui/card'
 import { Zap } from 'lucide-react'
 
@@ -9,17 +10,20 @@ export default function Home () {
 		<div className="flex min-h-screen bg-background">
 			<Sidebar />
 
-			<main className="flex-1 overflow-y-auto">
-				<div className="p-8 max-w-7xl mx-auto space-y-8">
-					{/* Header */}
-					<div>
-						<h1 className="text-4xl font-bold tracking-tight mb-2">
-							Welcome
-						</h1>
-						<p className="text-muted-foreground">
-							Select a market from the sidebar to begin analysis
-						</p>
-					</div>
+			<div className="flex-1 flex flex-col">
+				<TopBar />
+
+				<main className="flex-1 overflow-y-auto">
+					<div className="p-8 max-w-7xl mx-auto space-y-8">
+						{/* Header */}
+						<div>
+							<h1 className="text-4xl font-bold tracking-tight mb-2">
+								Welcome
+							</h1>
+							<p className="text-muted-foreground">
+								Select a market from the sidebar to begin analysis
+							</p>
+						</div>
 
 					{/* Empty State */}
 					<Card className="border-dashed">
@@ -35,15 +39,16 @@ export default function Home () {
 						</CardContent>
 					</Card>
 
-					{/* Footer */}
-					<div className="pt-8 border-t border-border/50 text-center text-xs text-muted-foreground">
-						<p>
-							Powered by OpenAI GPT-4 • Market data from official sources •
-							AI-generated strategic analysis
-						</p>
+						{/* Footer */}
+						<div className="pt-8 border-t border-border/50 text-center text-xs text-muted-foreground">
+							<p>
+								Powered by OpenAI GPT-4 • Market data from official sources •
+								AI-generated strategic analysis
+							</p>
+						</div>
 					</div>
-				</div>
-			</main>
+				</main>
+			</div>
 		</div>
 	)
 }

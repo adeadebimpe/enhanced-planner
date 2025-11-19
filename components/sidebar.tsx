@@ -18,7 +18,7 @@ export function Sidebar () {
 		<>
 			<div className="w-60 bg-background border-r border-border/50 h-screen sticky top-0 flex flex-col">
 				{/* Header */}
-				<div className="px-8 py-4 border-b border-border/50">
+				<div className="px-8 h-14 border-b border-border/50 flex items-center">
 					<Link href="/" className="block">
 						<h1 className="text-sm font-medium tracking-wide">
 							Enhanced Games
