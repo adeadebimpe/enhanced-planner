@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" className="dark" suppressHydrationWarning>
-			<body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`} suppressHydrationWarning>
+			<body className={`${inter.variable} ${jetbrainsMono.variable} font-sans overflow-x-hidden`} suppressHydrationWarning>
 				<ChatProvider>
 					<MarketProvider>{children}</MarketProvider>
 				</ChatProvider>

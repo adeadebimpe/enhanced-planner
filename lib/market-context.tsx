@@ -6,7 +6,7 @@ import { markets as seedMarkets } from '@/data/markets'
 
 interface MarketContextType {
 	customMarkets: CustomMarket[]
-	addCustomMarket: (market: Omit<CustomMarket, 'id' | 'createdAt'>) => void
+	addCustomMarket: (market: Omit<CustomMarket, 'id' | 'createdAt'>) => CustomMarket
 	removeCustomMarket: (id: string) => void
 	getAllMarkets: () => { id: string; name: string; isCustom: boolean }[]
 	getMarketById: (id: string) => CustomMarket | null
@@ -28,14 +28,18 @@ export function MarketProvider ({ children }: { children: ReactNode }) {
 		if (stored) {
 			try {
 				const parsed = JSON.parse(stored)
-				setCustomMarkets(
-					parsed.map((m: CustomMarket) => ({
-						...m,
-						createdAt: new Date(m.createdAt),
-					})),
-				)
+				if (Array.isArray(parsed)) {
+					setCustomMarkets(
+						parsed.map((m: CustomMarket) => ({
+							...m,
+							createdAt: new Date(m.createdAt),
+						})),
+					)
+				}
 			} catch (err) {
 				console.error('Failed to load markets from storage:', err)
+				// Clear corrupted data
+				localStorage.removeItem(STORAGE_KEY)
 			}
 		}
 	}, [])
@@ -54,6 +58,7 @@ export function MarketProvider ({ children }: { children: ReactNode }) {
 			createdAt: new Date(),
 		}
 		setCustomMarkets(prev => [...prev, newMarket])
+		return newMarket
 	}
 
 	function removeCustomMarket (id: string) {

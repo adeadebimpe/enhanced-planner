@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { markets as seedMarkets } from '@/data/markets'
 import type { Scenario, StrategyResponse, MarketData, MarketAnalysis, ExecutionPlan } from '@/lib/types'
-import { Sidebar } from '@/components/sidebar'
+import { Sidebar, SidebarProvider, MobileMenuButton } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -215,34 +215,36 @@ export default function MarketPage () {
 	}
 
 	return (
-		<div className="flex min-h-screen bg-background">
-			<Sidebar />
+		<SidebarProvider>
+			<div className="flex min-h-screen bg-background overflow-x-hidden">
+				<Sidebar />
 
-			<div className="flex flex-1 overflow-hidden">
-				<div className={`flex-1 flex flex-col transition-all duration-300 ${isAiPanelOpen ? 'md:mr-96 mr-0' : ''}`}>
-					{/* Top Bar */}
-					<TopBar
-						leftContent={
-							marketData && (
-								<AiSearchBar
-									market={marketData}
-									strategy={strategy || undefined}
-									onOpenPanel={() => setIsAiPanelOpen(true)}
-								/>
-							)
-						}
-						rightContent={
-							<Link href="/compare">
-								<Button variant="outline" size="sm">
-									<ArrowLeftRight className="h-4 w-4 mr-2" />
-									Compare Markets
-								</Button>
-							</Link>
-						}
-					/>
+				<div className="flex flex-1 overflow-hidden min-w-0">
+					<div className={`flex-1 flex flex-col transition-all duration-300 ${isAiPanelOpen ? 'md:mr-96 mr-0' : ''}`}>
+						{/* Top Bar */}
+						<TopBar
+							mobileMenuButton={<MobileMenuButton />}
+							leftContent={
+								marketData && (
+									<AiSearchBar
+										market={marketData}
+										strategy={strategy || undefined}
+										onOpenPanel={() => setIsAiPanelOpen(true)}
+									/>
+								)
+							}
+							rightContent={
+								<Link href="/compare">
+									<Button variant="outline" size="sm">
+										<ArrowLeftRight className="h-4 w-4 mr-2" />
+										Compare Markets
+									</Button>
+								</Link>
+							}
+						/>
 
 					<main className="flex-1 overflow-y-auto border-x border-border/50">
-					<div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4">
+					<div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 min-w-0">
 						{/* Market Title */}
 						<motion.div
 							initial={{ opacity: 0, y: -20 }}
@@ -268,16 +270,15 @@ export default function MarketPage () {
 					{isLoadingAnalysis && (
 						<div className="space-y-6">
 							{/* Summary Skeleton */}
-							<Skeleton className="h-6 w-full" />
+							<Skeleton className="h-4 md:h-6 w-full" />
 
 							{/* Scenario Selector Skeleton */}
-							<div className="flex items-center gap-3">
-								<Skeleton className="h-4 w-24" />
-								<div className="flex gap-2">
-									<Skeleton className="h-8 w-28" />
-									<Skeleton className="h-8 w-28" />
-									<Skeleton className="h-8 w-28" />
-									<Skeleton className="h-8 w-28" />
+							<div className="flex flex-col gap-3 md:flex-row md:items-center">
+								<Skeleton className="h-3 md:h-4 w-20 md:w-24" />
+								<div className="flex gap-2 flex-wrap">
+									<Skeleton className="h-7 md:h-8 w-24 md:w-28" />
+									<Skeleton className="h-7 md:h-8 w-24 md:w-28" />
+									<Skeleton className="h-7 md:h-8 w-24 md:w-28" />
 								</div>
 							</div>
 
@@ -285,10 +286,10 @@ export default function MarketPage () {
 							<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 								{[...Array(4)].map((_, i) => (
 									<Card key={i} className="bg-card/50 border-border">
-										<CardContent className="p-6 space-y-2">
-											<Skeleton className="h-4 w-20" />
-											<Skeleton className="h-8 w-16" />
-											<Skeleton className="h-3 w-32" />
+										<CardContent className="p-4 md:p-6 space-y-2">
+											<Skeleton className="h-3 md:h-4 w-16 md:w-20" />
+											<Skeleton className="h-6 md:h-8 w-12 md:w-16" />
+											<Skeleton className="h-2.5 md:h-3 w-24 md:w-32" />
 										</CardContent>
 									</Card>
 								))}
@@ -298,23 +299,23 @@ export default function MarketPage () {
 							<div className="grid gap-6 lg:grid-cols-2">
 								<Card className="bg-card/50 border-border">
 									<CardHeader>
-										<Skeleton className="h-4 w-32" />
+										<Skeleton className="h-3 md:h-4 w-24 md:w-32" />
 									</CardHeader>
 									<CardContent className="space-y-3">
 										{[...Array(5)].map((_, i) => (
 											<div key={i} className="flex justify-between">
-												<Skeleton className="h-4 w-24" />
-												<Skeleton className="h-4 w-16" />
+												<Skeleton className="h-3 md:h-4 w-20 md:w-24" />
+												<Skeleton className="h-3 md:h-4 w-12 md:w-16" />
 											</div>
 										))}
 									</CardContent>
 								</Card>
 								<Card className="bg-card/50 border-border">
 									<CardHeader>
-										<Skeleton className="h-4 w-24" />
+										<Skeleton className="h-3 md:h-4 w-20 md:w-24" />
 									</CardHeader>
 									<CardContent>
-										<Skeleton className="h-[350px] w-full" />
+										<Skeleton className="h-[280px] md:h-[350px] w-full" />
 									</CardContent>
 								</Card>
 							</div>
@@ -322,23 +323,23 @@ export default function MarketPage () {
 							{/* Best Cities Skeleton */}
 							<Card className="bg-card/50 border-border">
 								<CardHeader>
-									<Skeleton className="h-4 w-32" />
+									<Skeleton className="h-3 md:h-4 w-24 md:w-32" />
 								</CardHeader>
 								<CardContent>
-									<Skeleton className="h-[500px] w-full" />
+									<Skeleton className="h-[400px] md:h-[500px] w-full" />
 								</CardContent>
 							</Card>
 
 							{/* Strategy Panel Skeleton */}
 							<Card className="bg-card/50 border-border">
 								<CardHeader>
-									<Skeleton className="h-4 w-48" />
+									<Skeleton className="h-3 md:h-4 w-40 md:w-48" />
 								</CardHeader>
 								<CardContent className="space-y-4">
 									{[...Array(5)].map((_, i) => (
 										<div key={i} className="space-y-2">
-											<Skeleton className="h-4 w-20" />
-											<Skeleton className="h-12 w-full" />
+											<Skeleton className="h-3 md:h-4 w-16 md:w-20" />
+											<Skeleton className="h-10 md:h-12 w-full" />
 										</div>
 									))}
 								</CardContent>
@@ -720,5 +721,6 @@ export default function MarketPage () {
 				)}
 			</div>
 		</div>
+		</SidebarProvider>
 	)
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
 	Dialog,
 	DialogContent,
@@ -52,6 +53,7 @@ const COUNTRIES = [
 ].sort()
 
 export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
+	const router = useRouter()
 	const { addCustomMarket, getAllMarkets } = useMarkets()
 	const [searchQuery, setSearchQuery] = useState('')
 	const existingMarkets = getAllMarkets().map(m => m.name.toLowerCase())
@@ -63,9 +65,11 @@ export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
 	)
 
 	function handleSelectCountry (country: string) {
-		addCustomMarket({ name: country })
+		const newMarket = addCustomMarket({ name: country })
 		setSearchQuery('')
 		onOpenChange(false)
+		// Redirect to the newly created market page
+		router.push(`/${newMarket.id}`)
 	}
 
 	return (

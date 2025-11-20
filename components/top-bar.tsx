@@ -7,6 +7,7 @@ interface TopBarProps {
 	onSearch?: (query: string) => void
 	leftContent?: React.ReactNode
 	rightContent?: React.ReactNode
+	mobileMenuButton?: React.ReactNode
 }
 
 export function TopBar({
@@ -14,11 +15,13 @@ export function TopBar({
 	onSearch,
 	leftContent,
 	rightContent,
+	mobileMenuButton,
 }: TopBarProps) {
 	return (
-		<div className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-			<div className="flex h-14 items-center justify-between px-2 md:px-4 lg:px-6 gap-2">
+		<div className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+			<div className="flex h-14 items-center justify-between px-4 md:px-4 lg:px-6 gap-2">
 				<div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+					{mobileMenuButton && <div className="lg:hidden">{mobileMenuButton}</div>}
 					{leftContent}
 				</div>
 				<div className="flex items-center gap-2 md:gap-4 flex-shrink-0">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Sidebar } from '@/components/sidebar'
+import { Sidebar, SidebarProvider, MobileMenuButton } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
 import { Button } from '@/components/ui/button'
 import { useMarkets } from '@/lib/market-context'
@@ -133,27 +133,29 @@ export default function ComparePage() {
 	}, [selectedMarkets])
 
 	return (
-		<div className="flex min-h-screen bg-background">
-			<Sidebar />
+		<SidebarProvider>
+			<div className="flex min-h-screen bg-background overflow-x-hidden">
+				<Sidebar />
 
-			<div className="flex-1 flex flex-col">
-				<TopBar
-					leftContent={
-						<Link href="/">
-							<Button variant="ghost" size="sm">
-								<ArrowLeft className="h-4 w-4 mr-2" />
-								Back
-							</Button>
-						</Link>
-					}
-				/>
+				<div className="flex-1 flex flex-col min-w-0">
+					<TopBar
+						mobileMenuButton={<MobileMenuButton />}
+						leftContent={
+							<Link href="/">
+								<Button variant="ghost" size="sm">
+									<ArrowLeft className="h-4 w-4 mr-2" />
+									Back
+								</Button>
+							</Link>
+						}
+					/>
 
 				<main className="flex-1 overflow-y-auto border-x border-border/50">
-					<div className="p-8 max-w-7xl mx-auto space-y-4">
+					<div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 min-w-0">
 						{/* Header */}
 						<div>
-							<h1 className="text-2xl font-medium tracking-tight">Compare Markets</h1>
-							<p className="text-sm text-muted-foreground mt-1">
+							<h1 className="text-xl md:text-2xl font-medium tracking-tight">Compare Markets</h1>
+							<p className="text-xs md:text-sm text-muted-foreground mt-1">
 								Select up to 3 markets to compare
 							</p>
 						</div>
@@ -173,20 +175,20 @@ export default function ComparePage() {
 
 						{/* Comparison View */}
 						{selectedMarkets.length > 0 ? (
-							
-								<div>
-									<div className="overflow-x-auto">
-												<table className="w-full">
+
+								<div className="min-w-0 w-full">
+									<div className="overflow-x-auto -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
+												<table className="w-full min-w-full">
 													<thead>
 														<tr className="bg-transparent">
-															<th className="text-left py-4 px-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+															<th className="text-left py-3 md:py-4 px-3 md:px-4 text-[10px] md:text-xs uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
 																Metric
 															</th>
 															{selectedMarkets.map(marketId => {
 																const market = markets.find(m => m.id === marketId)
 																return (
-																	<th key={marketId} className="text-left py-4 px-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-																		{market?.name}
+																	<th key={marketId} className="text-left py-3 md:py-4 px-3 md:px-4 text-[10px] md:text-xs uppercase tracking-wider text-muted-foreground font-medium">
+																		<span className="block max-w-[120px] md:max-w-none">{market?.name}</span>
 																	</th>
 																)
 															})}
@@ -195,42 +197,42 @@ export default function ComparePage() {
 													<tbody>
 														{/* Basic Info */}
 														<tr className="bg-secondary/20">
-															<td className="py-3 px-4 text-xs uppercase tracking-wider font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-[10px] md:text-xs uppercase tracking-wider font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Basic Information
 															</td>
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Country Code</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Country Code</td>
 															{selectedMarkets.map(marketId => {
 																const market = markets.find(m => m.id === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{market?.id.toUpperCase()}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Population</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Population</td>
 															{selectedMarkets.map(marketId => {
 																const seedMarket = seedMarkets.find(
 																	m => m.code.toLowerCase() === marketId.toLowerCase()
 																)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{seedMarket ? (seedMarket.population / 1000000).toFixed(1) + 'M' : 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">GDP per Capita</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">GDP per Capita</td>
 															{selectedMarkets.map(marketId => {
 																const seedMarket = seedMarkets.find(
 																	m => m.code.toLowerCase() === marketId.toLowerCase()
 																)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{seedMarket ? '$' + seedMarket.gdpPerCapita.toLocaleString() : 'N/A'}
 																	</td>
 																)
@@ -239,39 +241,39 @@ export default function ComparePage() {
 
 														{/* Risk Metrics */}
 														<tr className="bg-secondary/20">
-															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-[10px] md:text-xs font-medium text-foreground uppercase tracking-wider" colSpan={selectedMarkets.length + 1}>
 																Risk & Opportunity
 															</td>
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Risk Level</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Risk Level</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono font-semibold">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono font-semibold">
 																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.scenarioImpact.risk.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Upside Potential</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Upside Potential</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono font-semibold">
-																		{marketStrategy?.strategy?.scenarioImpact.upside.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono font-semibold">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.scenarioImpact.upside.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Cost Index</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Cost Index</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono font-semibold">
-																		{marketStrategy?.strategy?.scenarioImpact.costIndex.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono font-semibold">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.scenarioImpact.costIndex.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
@@ -279,61 +281,61 @@ export default function ComparePage() {
 
 														{/* Soft Scores */}
 														<tr className="bg-secondary/20">
-															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-[10px] md:text-xs font-medium text-foreground uppercase tracking-wider" colSpan={selectedMarkets.length + 1}>
 																Soft Scores
 															</td>
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Cultural Fit</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Cultural Fit</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
-																		{marketStrategy?.strategy?.softScores.culturalFit.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.softScores.culturalFit.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Regulatory Friendliness</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Regulatory Friendliness</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
-																		{marketStrategy?.strategy?.softScores.regulatoryFriendliness.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.softScores.regulatoryFriendliness.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Media Potential</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Media Potential</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
-																		{marketStrategy?.strategy?.softScores.mediaPotential.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.softScores.mediaPotential.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Sponsorship Appetite</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Sponsorship Appetite</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
-																		{marketStrategy?.strategy?.softScores.sponsorshipAppetite.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.softScores.sponsorshipAppetite.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Infrastructure Readiness</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Infrastructure Readiness</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
-																		{marketStrategy?.strategy?.softScores.infrastructureReadiness.toFixed(1) || 'N/A'}
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.softScores.infrastructureReadiness.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
@@ -341,65 +343,80 @@ export default function ComparePage() {
 
 														{/* Market Insights */}
 														<tr className="bg-secondary/20">
-															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-[10px] md:text-xs font-medium text-foreground uppercase tracking-wider" colSpan={selectedMarkets.length + 1}>
 																Market Insights
 															</td>
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Audience Size</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Audience Size</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
+																if (marketStrategy?.isLoading) {
+																	return <td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono"><LoadingCell /></td>
+																}
 																const audienceSize = marketStrategy?.strategy?.marketInsights?.audienceSize
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{audienceSize != null ? audienceSize.toFixed(1) + 'M' : 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Fitness Rate</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Fitness Rate</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
+																if (marketStrategy?.isLoading) {
+																	return <td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono"><LoadingCell /></td>
+																}
 																const fitnessRate = marketStrategy?.strategy?.marketInsights?.fitnessRate
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{fitnessRate != null ? fitnessRate.toFixed(0) + '%' : 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Streaming Score</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Streaming Score</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
+																if (marketStrategy?.isLoading) {
+																	return <td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono"><LoadingCell /></td>
+																}
 																const streamingScore = marketStrategy?.strategy?.marketInsights?.streamingScore
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{streamingScore ?? 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Sponsorship Value</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Sponsorship Value</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
+																if (marketStrategy?.isLoading) {
+																	return <td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono"><LoadingCell /></td>
+																}
 																const sponsorshipValue = marketStrategy?.strategy?.marketInsights?.sponsorshipValue
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{sponsorshipValue ?? 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">Regulation Score</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">Regulation Score</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
+																if (marketStrategy?.isLoading) {
+																	return <td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono"><LoadingCell /></td>
+																}
 																const regulationScore = marketStrategy?.strategy?.marketInsights?.regulationScore
 																return (
-																	<td key={marketId} className="py-3 px-4 text-sm font-mono">
+																	<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-mono">
 																		{regulationScore ?? 'N/A'}
 																	</td>
 																)
@@ -408,14 +425,14 @@ export default function ComparePage() {
 
 														{/* Actions */}
 														<tr className="bg-secondary/20">
-															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-[10px] md:text-xs font-medium text-foreground uppercase tracking-wider" colSpan={selectedMarkets.length + 1}>
 																Actions
 															</td>
 														</tr>
 														<tr>
-															<td className="py-3 px-4 text-sm text-muted-foreground">View Full Analysis</td>
+															<td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap">View Full Analysis</td>
 															{selectedMarkets.map(marketId => (
-																<td key={marketId} className="py-3 px-4 text-sm">
+																<td key={marketId} className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm">
 																	<Link href={`/${marketId}`}>
 																		<Button variant="outline" size="sm">
 																			View Details
@@ -442,5 +459,6 @@ export default function ComparePage() {
 				</main>
 			</div>
 		</div>
+		</SidebarProvider>
 	)
 }

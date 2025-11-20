@@ -77,29 +77,29 @@ export function MultiSelect({
 			>
 				<div className="flex-1 flex flex-wrap gap-1.5">
 					{selectedOptions.length === 0 ? (
-						<span className="text-muted-foreground">{placeholder}</span>
+						<span className="text-muted-foreground text-xs md:text-sm">{placeholder}</span>
 					) : (
 						selectedOptions.map(option => (
 							<span
 								key={option.value}
-								className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-xs font-medium"
+								className="inline-flex items-center gap-1 px-2 md:px-2.5 py-0.5 md:py-1 rounded-md bg-primary text-primary-foreground text-xs md:text-sm font-medium"
 							>
 								{option.label}
 								<button
 									onClick={(e) => removeOption(option.value, e)}
 									className="hover:bg-primary/80 rounded-sm transition-colors"
 								>
-									<X className="h-3 w-3" />
+									<X className="h-3 w-3 md:h-3.5 md:w-3.5" />
 								</button>
 							</span>
 						))
 					)}
 				</div>
-				<div className="flex items-center gap-2 ml-2">
+				<div className="flex items-center gap-2 ml-2 flex-shrink-0">
 					{selectedOptions.length > 0 && (
 						<button
 							onClick={clearAll}
-							className="text-muted-foreground hover:text-foreground text-xs"
+							className="text-muted-foreground hover:text-foreground text-xs md:text-sm whitespace-nowrap"
 						>
 							Clear
 						</button>
@@ -119,13 +119,13 @@ export function MultiSelect({
 							placeholder="Search..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+							className="w-full px-3 py-2 text-xs md:text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
 							onClick={(e) => e.stopPropagation()}
 						/>
 					</div>
 					<div className="max-h-60 overflow-y-auto">
 						{filteredOptions.length === 0 ? (
-							<div className="px-4 py-8 text-center text-sm text-muted-foreground">
+							<div className="px-4 py-8 text-center text-xs md:text-sm text-muted-foreground">
 								No results found
 							</div>
 						) : (
@@ -139,21 +139,21 @@ export function MultiSelect({
 										onClick={() => !isDisabled && toggleOption(option.value)}
 										disabled={isDisabled}
 										className={cn(
-											'w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-accent transition-colors text-left',
+											'w-full flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm hover:bg-accent transition-colors text-left',
 											isSelected && 'bg-accent/50',
 											isDisabled && 'opacity-50 cursor-not-allowed'
 										)}
 									>
 										<span>{option.label}</span>
-										{isSelected && <Check className="h-4 w-4 text-primary" />}
+										{isSelected && <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />}
 									</button>
 								)
 							})
 						)}
 					</div>
 					{maxSelections && (
-						<div className="px-4 py-2 border-t border-border bg-muted/30">
-							<p className="text-xs text-muted-foreground">
+						<div className="px-3 md:px-4 py-2 border-t border-border bg-muted/30">
+							<p className="text-[10px] md:text-xs text-muted-foreground">
 								{selected.length} / {maxSelections} selected
 							</p>
 						</div>

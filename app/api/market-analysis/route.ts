@@ -9,21 +9,39 @@ function getOpenAIClient () {
 	if (!apiKey) {
 		throw new Error('OPENAI_API_KEY environment variable is not set')
 	}
-	return new OpenAI({ apiKey })
+	return new OpenAI({ apiKey, timeout: 60000 }) // 60 second timeout
 }
+
+// Retry helper with exponential backoff
+async function withRetry<T> (
+	fn: () => Promise<T>,
+	retries = 3,
+	delay = 1000,
+): Promise<T> {
+	try {
+		return await fn()
+	} catch (error) {
+		if (retries === 0) throw error
+		await new Promise(resolve => setTimeout(resolve, delay))
+		return withRetry(fn, retries - 1, delay * 2)
+	}
+}
+
+// Helper to clamp numbers to 0-10 range
+const clampScore = (val: number) => Math.max(0, Math.min(10, val))
 
 const marketAnalysisSchema = z.object({
 	softScores: z.object({
-		culturalFit: z.number().min(0).max(10),
-		regulatoryFriendliness: z.number().min(0).max(10),
-		mediaPotential: z.number().min(0).max(10),
-		sponsorshipAppetite: z.number().min(0).max(10),
-		infrastructureReadiness: z.number().min(0).max(10),
+		culturalFit: z.number().transform(clampScore),
+		regulatoryFriendliness: z.number().transform(clampScore),
+		mediaPotential: z.number().transform(clampScore),
+		sponsorshipAppetite: z.number().transform(clampScore),
+		infrastructureReadiness: z.number().transform(clampScore),
 	}),
 	scenarioImpact: z.object({
-		risk: z.number().min(0).max(10),
-		upside: z.number().min(0).max(10),
-		costIndex: z.number().min(0).max(10),
+		risk: z.number().transform(clampScore),
+		upside: z.number().transform(clampScore),
+		costIndex: z.number().transform(clampScore),
 	}),
 	marketInsights: z.object({
 		audienceSize: z.number(),
@@ -33,7 +51,7 @@ const marketAnalysisSchema = z.object({
 		regulationScore: z.number(),
 	}),
 	geopoliticalAssessment: z.object({
-		stabilityScore: z.number().min(0).max(10),
+		stabilityScore: z.number().transform(clampScore),
 		riskLevel: z.enum(['Low', 'Medium', 'High']),
 		keyFactors: z.array(z.string()),
 		recommendations: z.array(z.string()),
@@ -67,28 +85,45 @@ export async function POST (req: NextRequest) {
 		const prompt = getMarketAnalysisPrompt(market)
 
 		const openai = getOpenAIClient()
-		const completion = await openai.chat.completions.create({
-			model: 'gpt-4o',
-			messages: [
-				{
-					role: 'system',
-					content: SYSTEM_PROMPT,
-				},
-				{ role: 'user', content: prompt },
-			],
-			temperature: 0.7,
-			response_format: { type: 'json_object' },
-		})
+
+		// Retry logic for API call
+		const completion = await withRetry(
+			async () => {
+				const result = await openai.chat.completions.create({
+					model: 'gpt-4o',
+					messages: [
+						{
+							role: 'system',
+							content: SYSTEM_PROMPT,
+						},
+						{ role: 'user', content: prompt },
+					],
+					temperature: 0.7,
+					max_tokens: 4096, // Prevent response cutoff
+					response_format: { type: 'json_object' },
+				})
+
+				const responseContent = result.choices[0]?.message?.content
+
+				if (!responseContent) {
+					console.error('OpenAI returned empty response:', {
+						choices: result.choices,
+						finishReason: result.choices[0]?.finish_reason,
+					})
+					throw new Error('Empty response from OpenAI')
+				}
+
+				return result
+			},
+			3, // 3 retries
+			1000, // Start with 1 second delay
+		)
 
 		const responseContent = completion.choices[0]?.message?.content
 
 		if (!responseContent) {
-			console.error('OpenAI returned empty response:', {
-				choices: completion.choices,
-				finishReason: completion.choices[0]?.finish_reason,
-			})
 			throw new Error(
-				'OpenAI returned an empty response. This is usually temporary - please try again.',
+				'OpenAI returned an empty response after retries. Please try again.',
 			)
 		}
 
