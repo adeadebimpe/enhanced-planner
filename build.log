@@ -1,0 +1,23 @@
+
+> enhanced-planner@1.0.0 build
+> next build
+
+   ▲ Next.js 15.5.6
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · cpus: 1
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 25.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/11) ...
+   Generating static pages (2/11) 
+   Generating static pages (5/11) 
+   Generating static pages (8/11) 
+ ✓ Generating static pages (11/11)
+
+> Build error occurred
+[Error [PageNotFoundError]: Cannot find module for page: /_error] {
+  code: 'ENOENT'
+}
