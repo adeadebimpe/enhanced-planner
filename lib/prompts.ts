@@ -52,7 +52,7 @@ Provide a data-driven, realistic market analysis in JSON format:
    - name: Actual city name (major cities only)
    - latitude: Accurate decimal coordinates
    - longitude: Accurate decimal coordinates
-   - population: Real city population in millions
+   - population: Real city population as a NUMBER (e.g., 8300000 for 8.3 million people, NOT 8.3). This should be the actual population count, not in millions.
    - advantages: 2-3 specific, factual advantages (e.g., "Home to 3 Olympic-standard stadiums", "Proven host of Formula 1 and international athletics")
 
 6. narrative - Be compelling but realistic:

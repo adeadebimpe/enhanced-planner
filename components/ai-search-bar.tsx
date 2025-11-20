@@ -4,21 +4,17 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, Search, X, MessageSquare } from 'lucide-react'
 import type { MarketData, StrategyResponse } from '@/lib/types'
+import { useChat, type Message } from '@/lib/chat-context'
 
 interface AiSearchBarProps {
 	market: MarketData
 	strategy?: StrategyResponse
 }
 
-interface Message {
-	role: 'user' | 'assistant'
-	content: string
-}
-
 export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 	const [input, setInput] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const [messages, setMessages] = useState<Message[]>([])
+	const { messages, addMessage, clearMessages } = useChat()
 	const [isOpen, setIsOpen] = useState(false)
 	const [mounted, setMounted] = useState(false)
 
@@ -33,7 +29,7 @@ export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 		if (!input.trim() || isLoading) return
 
 		const userMessage: Message = { role: 'user', content: input }
-		setMessages(prev => [...prev, userMessage])
+		addMessage(userMessage)
 		setInput('')
 		setIsLoading(true)
 		setIsOpen(true)
@@ -59,7 +55,7 @@ export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 				role: 'assistant',
 				content: data.answer,
 			}
-			setMessages(prev => [...prev, assistantMessage])
+			addMessage(assistantMessage)
 		} catch (err) {
 			console.error('Search error:', err)
 			const errorMessage: Message = {
@@ -69,7 +65,7 @@ export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 						? `Error: ${err.message}`
 						: 'Failed to get response',
 			}
-			setMessages(prev => [...prev, errorMessage])
+			addMessage(errorMessage)
 		} finally {
 			setIsLoading(false)
 		}
@@ -80,7 +76,7 @@ export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 	}
 
 	function handleClear() {
-		setMessages([])
+		clearMessages()
 		setInput('')
 		setIsOpen(false)
 	}
@@ -99,7 +95,7 @@ export function AiSearchBar({ market, strategy }: AiSearchBarProps) {
 						type="text"
 						value={input}
 						onChange={e => setInput(e.target.value)}
-						placeholder="Ask AI about this market..."
+						placeholder="Ask AI about markets..."
 						className="w-full bg-card/50 border border-border pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
 						disabled={isLoading}
 						onFocus={() => setIsOpen(true)}
