@@ -58,14 +58,14 @@ export function SingleRadarChart({ softScores }: SingleRadarChartProps) {
 				</h3>
 			</CardHeader>
 			<CardContent>
-				<ResponsiveContainer width="100%" height={350}>
+				<ResponsiveContainer width="100%" height={350} className="md:h-[350px] h-[280px]">
 					<RadarChart data={data}>
 						<PolarGrid stroke="hsl(var(--border))" opacity={0.3} />
 						<PolarAngleAxis
 							dataKey="metric"
 							tick={{
 								fill: 'hsl(var(--foreground))',
-								fontSize: 12,
+								fontSize: 11,
 								fontWeight: 500,
 							}}
 						/>
@@ -74,7 +74,7 @@ export function SingleRadarChart({ softScores }: SingleRadarChartProps) {
 							domain={[0, 10]}
 							tick={{
 								fill: 'hsl(var(--muted-foreground))',
-								fontSize: 10,
+								fontSize: 9,
 							}}
 							axisLine={false}
 						/>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { StrategyPanel } from '@/components/strategy-panel'
 import { MetricCard } from '@/components/metric-card'
 import { SingleRadarChart } from '@/components/single-radar-chart'
-import { AiSearchBar } from '@/components/ai-search-bar'
+import { AiSearchBar, AiChatPanel } from '@/components/ai-search-bar'
 import { TrendingUp, TrendingDown, DollarSign, Users, Loader2, Info, ArrowLeftRight } from 'lucide-react'
 import {
 	Radar,
@@ -52,6 +52,7 @@ export default function MarketPage () {
 	const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false)
 	const [isLoadingPlan, setIsLoadingPlan] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const [isAiPanelOpen, setIsAiPanelOpen] = useState(false)
 	const [isInitialPageLoad, setIsInitialPageLoad] = useState(() => {
 		// Check if this is a fresh page load or refresh
 		if (typeof window !== 'undefined') {
@@ -217,36 +218,38 @@ export default function MarketPage () {
 		<div className="flex min-h-screen bg-background">
 			<Sidebar />
 
-			<div className="flex-1 flex flex-col">
-				{/* Top Bar */}
-				<TopBar
-					leftContent={
-						marketData && (
-							<AiSearchBar
-								market={marketData}
-								strategy={strategy || undefined}
-							/>
-						)
-					}
-					rightContent={
-						<Link href="/compare">
-							<Button variant="outline" size="sm">
-								<ArrowLeftRight className="h-4 w-4 mr-2" />
-								Compare Markets
-							</Button>
-						</Link>
-					}
-				/>
+			<div className="flex flex-1 overflow-hidden">
+				<div className={`flex-1 flex flex-col transition-all duration-300 ${isAiPanelOpen ? 'md:mr-96 mr-0' : ''}`}>
+					{/* Top Bar */}
+					<TopBar
+						leftContent={
+							marketData && (
+								<AiSearchBar
+									market={marketData}
+									strategy={strategy || undefined}
+									onOpenPanel={() => setIsAiPanelOpen(true)}
+								/>
+							)
+						}
+						rightContent={
+							<Link href="/compare">
+								<Button variant="outline" size="sm">
+									<ArrowLeftRight className="h-4 w-4 mr-2" />
+									Compare Markets
+								</Button>
+							</Link>
+						}
+					/>
 
-				<main className="flex-1 overflow-y-auto border-x border-border/50">
-					<div className="p-8 max-w-7xl mx-auto space-y-4">
+					<main className="flex-1 overflow-y-auto border-x border-border/50">
+					<div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-4">
 						{/* Market Title */}
 						<motion.div
 							initial={{ opacity: 0, y: -20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.5 }}
 						>
-							<h1 className="text-2xl font-medium tracking-tight">{market.name}</h1>
+							<h1 className="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight">{market.name}</h1>
 						</motion.div>
 
 					{/* Error */}
@@ -348,7 +351,7 @@ export default function MarketPage () {
 						<div className="space-y-6">
 							{/* Strategic Summary */}
 							<AnimatedSection delay={0}>
-								<p className="text-sm leading-relaxed text-foreground/90">
+								<p className="text-xs md:text-sm leading-relaxed text-foreground/90">
 									{marketAnalysis.narrative.summary}
 								</p>
 							</AnimatedSection>
@@ -502,7 +505,7 @@ export default function MarketPage () {
 									</CardHeader>
 									<CardContent>
 										{/* Radar Chart */}
-										<ResponsiveContainer width="100%" height={350}>
+										<ResponsiveContainer width="100%" height={350} className="md:h-[350px] h-[280px]">
 											<RadarChart data={[
 												{ metric: 'Cultural Fit', value: marketAnalysis.softScores.culturalFit, fullMark: 10 },
 												{ metric: 'Regulatory', value: marketAnalysis.softScores.regulatoryFriendliness, fullMark: 10 },
@@ -515,7 +518,7 @@ export default function MarketPage () {
 													dataKey="metric"
 													tick={{
 														fill: 'hsl(var(--foreground))',
-														fontSize: 12,
+														fontSize: 11,
 														fontWeight: 500,
 													}}
 												/>
@@ -542,8 +545,19 @@ export default function MarketPage () {
 														backgroundColor: 'hsl(var(--card))',
 														border: '1px solid hsl(var(--border))',
 														borderRadius: '6px',
-														padding: '8px 12px',
+														padding: '6px 10px',
 														color: 'hsl(var(--foreground))',
+														fontSize: 11,
+													}}
+													itemStyle={{
+														color: 'hsl(var(--foreground))',
+														fontSize: 11,
+														fontWeight: 500,
+													}}
+													labelStyle={{
+														color: 'hsl(var(--muted-foreground))',
+														fontSize: 11,
+														marginBottom: 2,
 													}}
 													formatter={(value: number) => [value.toFixed(1), 'Score']}
 												/>
@@ -567,8 +581,8 @@ export default function MarketPage () {
 									<CardContent>
 										<ul className="space-y-2">
 											{marketAnalysis.narrative.reasonsToEnter.map((reason, idx) => (
-												<li key={idx} className="text-sm text-foreground/80 flex items-start gap-2">
-													<CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+												<li key={idx} className="text-xs md:text-sm text-foreground/80 flex items-start gap-2">
+													<CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-success mt-0.5 flex-shrink-0" />
 													<span>{reason}</span>
 												</li>
 											))}
@@ -586,8 +600,8 @@ export default function MarketPage () {
 									<CardContent>
 										<ul className="space-y-2">
 											{marketAnalysis.narrative.keyRisks.map((risk, idx) => (
-												<li key={idx} className="text-sm text-foreground/80 flex items-start gap-2">
-													<AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
+												<li key={idx} className="text-xs md:text-sm text-foreground/80 flex items-start gap-2">
+													<AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4 text-warning mt-0.5 flex-shrink-0" />
 													<span>{risk}</span>
 												</li>
 											))}
@@ -605,7 +619,7 @@ export default function MarketPage () {
 									<CardContent className="space-y-4">
 										<div className="flex items-center justify-between">
 											<span className="text-xs text-muted-foreground">Stability Score</span>
-											<span className="text-lg font-semibold text-foreground">{marketAnalysis.geopoliticalAssessment.stabilityScore.toFixed(1)}/10</span>
+											<span className="text-base md:text-lg font-semibold text-foreground">{marketAnalysis.geopoliticalAssessment.stabilityScore.toFixed(1)}/10</span>
 										</div>
 										<div className="flex items-center justify-between">
 											<span className="text-xs text-muted-foreground">Risk Level</span>
@@ -653,17 +667,17 @@ export default function MarketPage () {
 										{/* Cities List */}
 										<div className="space-y-4">
 											{marketAnalysis.bestCities.map((city, idx) => (
-												<div key={idx} className="space-y-2 p-4 rounded-lg bg-secondary/30 border border-border/50">
+												<div key={idx} className="space-y-2 p-3 md:p-4 rounded-lg bg-secondary/30 border border-border/50">
 													<div className="flex items-start justify-between">
-														<h4 className="text-sm font-semibold text-white">{city.name}</h4>
-														<span className="text-xs font-mono text-white">#{idx + 1}</span>
+														<h4 className="text-xs md:text-sm font-semibold text-white">{city.name}</h4>
+														<span className="text-[10px] md:text-xs font-mono text-white">#{idx + 1}</span>
 													</div>
-													<p className="text-xs text-white/70">
+													<p className="text-[10px] md:text-xs text-white/70">
 														Pop: {(city.population / 1000000).toFixed(1)}M
 													</p>
 													<ul className="space-y-1">
 														{city.advantages.slice(0, 2).map((adv, advIdx) => (
-															<li key={advIdx} className="text-xs text-white/70 flex items-start gap-1.5">
+															<li key={advIdx} className="text-[10px] md:text-xs text-white/70 flex items-start gap-1.5">
 																<span className="text-white/70 mt-0.5">•</span>
 																<span>{adv}</span>
 															</li>
@@ -693,6 +707,17 @@ export default function MarketPage () {
 
 					</div>
 				</main>
+				</div>
+
+				{/* AI Chat Panel */}
+				{marketData && (
+					<AiChatPanel
+						market={marketData}
+						strategy={strategy || undefined}
+						isOpen={isAiPanelOpen}
+						onClose={() => setIsAiPanelOpen(false)}
+					/>
+				)}
 			</div>
 		</div>
 	)

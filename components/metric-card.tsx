@@ -31,7 +31,7 @@ export function MetricCard ({
 	return (
 		<div
 			className={cn(
-				'bg-card rounded-lg border border-border p-4 hover:bg-card/80 transition-colors',
+				'bg-card rounded-lg border border-border p-3 md:p-4 hover:bg-card/80 transition-colors',
 				className,
 			)}
 		>
@@ -56,7 +56,7 @@ export function MetricCard ({
 			</div>
 
 			<div className="flex items-end gap-2">
-				<span className="text-2xl font-mono font-semibold tracking-tight">
+				<span className="text-xl md:text-2xl font-mono font-semibold tracking-tight">
 					{value}
 				</span>
 				{change && (

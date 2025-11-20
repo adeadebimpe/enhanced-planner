@@ -92,7 +92,7 @@ export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
 					</div>
 
 					{/* Country List */}
-					<div className="max-h-96 overflow-y-auto border border-border">
+					<div className="max-h-96 overflow-y-auto">
 						{filteredCountries.length === 0 ? (
 							<div className="p-8 text-center text-sm text-muted-foreground">
 								{searchQuery
@@ -100,12 +100,12 @@ export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
 									: 'All countries have been added'}
 							</div>
 						) : (
-							<div className="divide-y divide-border">
+							<div className="">
 								{filteredCountries.slice(0, 50).map(country => (
 									<button
 										key={country}
 										onClick={() => handleSelectCountry(country)}
-										className="w-full px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors"
+										className="w-full px-2 py-2.5 text-left text-sm hover:bg-accent transition-colors"
 									>
 										{country}
 									</button>
