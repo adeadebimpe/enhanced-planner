@@ -219,7 +219,7 @@ export default function MarketPage () {
 			<div className="flex min-h-screen bg-background overflow-x-hidden">
 				<Sidebar />
 
-				<div className="flex flex-1 overflow-hidden min-w-0">
+				<div className="flex flex-1 overflow-hidden min-w-0 lg:ml-60">
 					<div className={`flex-1 flex flex-col transition-all duration-300 ${isAiPanelOpen ? 'md:mr-96 mr-0' : ''}`}>
 						{/* Top Bar */}
 						<TopBar

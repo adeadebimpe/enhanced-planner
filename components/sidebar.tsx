@@ -62,9 +62,9 @@ export function Sidebar () {
 
 			{/* Sidebar */}
 			<div className={`
-				w-60 bg-background h-screen flex flex-col
+				w-60 bg-background h-screen flex flex-col border-r border-border/50
 				${isMobileMenuOpen ? 'fixed left-0 top-0 z-50 shadow-2xl' : 'hidden'}
-				lg:sticky lg:top-0 lg:block
+				lg:fixed lg:left-0 lg:top-0 lg:block
 			`}>
 				{/* Mobile Close Button */}
 				<button
