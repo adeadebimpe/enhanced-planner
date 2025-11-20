@@ -20,7 +20,7 @@ const STORAGE_KEY = 'enhanced-games-markets'
 
 export function MarketProvider ({ children }: { children: ReactNode }) {
 	const [customMarkets, setCustomMarkets] = useState<CustomMarket[]>([])
-	const [scenario, setScenario] = useState<Scenario>('Low Regulation')
+	const [scenario, setScenario] = useState<Scenario>('High Capital')
 
 	// Load from localStorage on mount
 	useEffect(() => {

@@ -44,7 +44,7 @@ export function MetricCard ({
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<button type="button" className="inline-flex">
-									<Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+									<Info className="h-3 w-3 text-muted-foreground/50 cursor-pointer" />
 								</button>
 							</TooltipTrigger>
 							<TooltipContent>
@@ -53,7 +53,6 @@ export function MetricCard ({
 						</Tooltip>
 					)}
 				</div>
-				{icon && <div className="text-muted-foreground">{icon}</div>}
 			</div>
 
 			<div className="flex items-end gap-2">
@@ -73,10 +72,6 @@ export function MetricCard ({
 					</span>
 				)}
 			</div>
-
-			{subtitle && (
-				<p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-			)}
 		</div>
 	)
 }

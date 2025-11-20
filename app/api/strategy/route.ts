@@ -24,6 +24,19 @@ const strategySchema = z.object({
 		upside: z.number().min(0).max(10),
 		costIndex: z.number().min(0).max(10),
 	}),
+	geopoliticalAssessment: z.object({
+		stabilityScore: z.number().min(0).max(10),
+		riskLevel: z.enum(['Low', 'Medium', 'High']),
+		keyFactors: z.array(z.string()),
+		recommendations: z.array(z.string()),
+	}),
+	bestCities: z.array(z.object({
+		name: z.string(),
+		latitude: z.number(),
+		longitude: z.number(),
+		population: z.number(),
+		advantages: z.array(z.string()),
+	})),
 	narrative: z.object({
 		summary: z.string(),
 		reasonsToEnter: z.array(z.string()),
@@ -74,12 +87,25 @@ Provide a comprehensive market entry strategy in JSON format with:
    - upside: Potential upside/opportunity
    - costIndex: Relative cost of market entry
 
-3. narrative:
+3. geopoliticalAssessment:
+   - stabilityScore: Political stability score (0-10 scale)
+   - riskLevel: Either 'Low', 'Medium', or 'High'
+   - keyFactors: 3-5 key geopolitical factors affecting the market (array of strings)
+   - recommendations: 2-3 recommendations for managing geopolitical risks (array of strings)
+
+4. bestCities: Array of 3-5 best cities to host events with:
+   - name: City name
+   - latitude: City latitude (decimal degrees)
+   - longitude: City longitude (decimal degrees)
+   - population: City population (number in millions)
+   - advantages: 2-3 key advantages of this city (array of strings)
+
+5. narrative:
    - summary: One compelling sentence on this market opportunity
    - reasonsToEnter: 3-4 bullet points on why to enter this market
    - keyRisks: 3-4 bullet points on key risks and challenges
 
-4. executionPlan: A 90-day execution plan broken into:
+6. executionPlan: A 90-day execution plan broken into:
    - week1to2: Initial actions
    - week3to4: Follow-up activities
    - week5to6: Mid-term milestones

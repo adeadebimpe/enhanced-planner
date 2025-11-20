@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { TopBar } from '@/components/top-bar'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useMarkets } from '@/lib/market-context'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { markets as seedMarkets } from '@/data/markets'
 import type { StrategyResponse, MarketData } from '@/lib/types'
+import { MultiSelect } from '@/components/multi-select'
 
 interface MarketStrategy {
 	marketId: string
@@ -18,21 +18,31 @@ interface MarketStrategy {
 	error: string | null
 }
 
+// Cache for market analyses
+const marketAnalysisCache = new Map<string, StrategyResponse>()
+
+// Helper component for loading cell
+function LoadingCell() {
+	return (
+		<div className="flex items-center justify-center text-xs text-muted-foreground">
+			...
+		</div>
+	)
+}
+
 export default function ComparePage() {
 	const { getAllMarkets } = useMarkets()
 	const markets = getAllMarkets()
 	const [selectedMarkets, setSelectedMarkets] = useState<string[]>(['us'])
 	const [marketStrategies, setMarketStrategies] = useState<MarketStrategy[]>([])
 
-	function toggleMarket(marketId: string) {
-		setSelectedMarkets(prev =>
-			prev.includes(marketId)
-				? prev.filter(id => id !== marketId)
-				: prev.length < 3
-					? [...prev, marketId]
-					: prev
-		)
-	}
+	// Prepare options for multi-select
+	const marketOptions = useMemo(() => {
+		return markets.map(market => ({
+			value: market.id,
+			label: market.name,
+		}))
+	}, [markets])
 
 	useEffect(() => {
 		async function fetchStrategies() {
@@ -41,20 +51,27 @@ export default function ComparePage() {
 				return
 			}
 
-			// Initialize loading state for all selected markets
-			setMarketStrategies(
-				selectedMarkets.map(id => ({
+			// Initialize with cached data or loading state
+			const initialStrategies = selectedMarkets.map(id => {
+				const cached = marketAnalysisCache.get(id)
+				return {
 					marketId: id,
-					strategy: null,
-					isLoading: true,
+					strategy: cached || null,
+					isLoading: !cached,
 					error: null,
-				}))
-			)
+				}
+			})
+			setMarketStrategies(initialStrategies)
 
-			// Fetch strategies for each market
-			const fetchPromises = selectedMarkets.map(async marketId => {
+			// Fetch only uncached markets
+			const uncachedMarkets = selectedMarkets.filter(id => !marketAnalysisCache.has(id))
+
+			if (uncachedMarkets.length === 0) return
+
+			// Fetch each market independently and update immediately
+			uncachedMarkets.forEach(async marketId => {
 				const market = markets.find(m => m.id === marketId)
-				if (!market) return null
+				if (!market) return
 
 				try {
 					const seedMarket = seedMarkets.find(
@@ -71,45 +88,49 @@ export default function ComparePage() {
 						regulationNotes: 'Custom market - analyzing based on available data',
 					}
 
-					const response = await fetch('/api/strategy', {
+					// Fetch market analysis
+					const analysisResponse = await fetch('/api/market-analysis', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							market: marketData,
-							scenario: 'Low Regulation',
-						}),
+						body: JSON.stringify({ market: marketData }),
 					})
 
-					if (!response.ok) {
-						throw new Error('Failed to fetch strategy')
+					if (!analysisResponse.ok) {
+						throw new Error('Failed to fetch market analysis')
 					}
 
-					const data = await response.json()
-					return {
-						marketId,
-						strategy: data,
-						isLoading: false,
-						error: null,
-					}
+					const analysisData = await analysisResponse.json()
+
+					// Cache the result
+					marketAnalysisCache.set(marketId, analysisData)
+
+					// Update state immediately for this market
+					setMarketStrategies(prev =>
+						prev.map(m =>
+							m.marketId === marketId
+								? { ...m, strategy: analysisData, isLoading: false }
+								: m
+						)
+					)
 				} catch (err) {
-					return {
-						marketId,
-						strategy: null,
-						isLoading: false,
-						error: err instanceof Error ? err.message : 'Failed to load',
-					}
+					setMarketStrategies(prev =>
+						prev.map(m =>
+							m.marketId === marketId
+								? {
+									...m,
+									isLoading: false,
+									error: err instanceof Error ? err.message : 'Failed to load',
+								}
+								: m
+						)
+					)
 				}
 			})
-
-			const results = await Promise.all(fetchPromises)
-			setMarketStrategies(results.filter(r => r !== null) as MarketStrategy[])
 		}
 
 		fetchStrategies()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedMarkets])
-
-	const isLoadingAny = marketStrategies.some(m => m.isLoading)
 
 	return (
 		<div className="flex min-h-screen bg-background">
@@ -127,80 +148,44 @@ export default function ComparePage() {
 					}
 				/>
 
-				<main className="flex-1 overflow-y-auto">
-					<div className="p-8 max-w-7xl mx-auto space-y-8">
+				<main className="flex-1 overflow-y-auto border-x border-border/50">
+					<div className="p-8 max-w-7xl mx-auto space-y-4">
 						{/* Header */}
 						<div>
-							<h1 className="text-4xl font-bold tracking-tight">Compare Markets</h1>
+							<h1 className="text-2xl font-medium tracking-tight">Compare Markets</h1>
 							<p className="text-sm text-muted-foreground mt-1">
 								Select up to 3 markets to compare
 							</p>
 						</div>
 
 						{/* Market Selection */}
-						<Card>
-							<CardHeader>
-								<h3 className="text-sm font-medium">
-									Select Markets ({selectedMarkets.length}/3)
-								</h3>
-							</CardHeader>
-							<CardContent>
-								<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-									{markets.map(market => {
-										const isSelected = selectedMarkets.includes(market.id)
-										return (
-											<button
-												key={market.id}
-												onClick={() => toggleMarket(market.id)}
-												disabled={!isSelected && selectedMarkets.length >= 3}
-												className={`p-4 border transition-all text-left ${
-													isSelected
-														? 'bg-primary/10 border-primary text-primary'
-														: 'border-border hover:border-primary/50 hover:bg-muted/50'
-												} disabled:opacity-50 disabled:cursor-not-allowed`}
-											>
-												<div className="font-medium text-sm">{market.name}</div>
-												{market.isCustom && (
-													<span className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary mt-1 inline-block">
-														Custom
-													</span>
-												)}
-											</button>
-										)
-									})}
-								</div>
-							</CardContent>
-						</Card>
+						<div className="space-y-4">
+							<div className="max-w-2xl">
+								<MultiSelect
+									options={marketOptions}
+									selected={selectedMarkets}
+									onChange={setSelectedMarkets}
+									placeholder="Select markets to compare..."
+									maxSelections={3}
+								/>
+							</div>
+						</div>
 
 						{/* Comparison View */}
 						{selectedMarkets.length > 0 ? (
-							<Card>
-								<CardHeader>
-									<h3 className="text-sm font-medium">Market Comparison</h3>
-								</CardHeader>
-								<CardContent>
-									{isLoadingAny ? (
-										<div className="flex items-center justify-center py-24">
-											<div className="space-y-3 text-center">
-												<Loader2 className="h-8 w-8 text-primary animate-spin mx-auto" />
-												<p className="text-xs text-muted-foreground font-mono">
-													Loading market strategies...
-												</p>
-											</div>
-										</div>
-									) : (
-										<>
-											<div className="overflow-x-auto">
+							
+								<div>
+									<div className="overflow-x-auto">
 												<table className="w-full">
 													<thead>
-														<tr className="border-b border-border bg-muted/30">
-															<th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
+														<tr className="bg-transparent">
+															<th className="text-left py-4 px-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">
 																Metric
 															</th>
 															{selectedMarkets.map(marketId => {
 																const market = markets.find(m => m.id === marketId)
 																return (
-																	<th key={marketId} className="text-left py-4 px-4 text-sm font-semibold text-foreground">
+																	<th key={marketId} className="text-left py-4 px-4 text-xs uppercase tracking-wider text-muted-foreground font-medium">
 																		{market?.name}
 																	</th>
 																)
@@ -209,12 +194,12 @@ export default function ComparePage() {
 													</thead>
 													<tbody>
 														{/* Basic Info */}
-														<tr className="border-b border-border/50 bg-muted/10">
-															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
+														<tr className="bg-secondary/20">
+															<td className="py-3 px-4 text-xs uppercase tracking-wider font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Basic Information
 															</td>
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Country Code</td>
 															{selectedMarkets.map(marketId => {
 																const market = markets.find(m => m.id === marketId)
@@ -225,26 +210,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
-															<td className="py-3 px-4 text-sm text-muted-foreground">Type</td>
-															{selectedMarkets.map(marketId => {
-																const market = markets.find(m => m.id === marketId)
-																return (
-																	<td key={marketId} className="py-3 px-4 text-sm">
-																		{market?.isCustom ? (
-																			<span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary">
-																				Custom
-																			</span>
-																		) : (
-																			<span className="text-xs px-2 py-1 rounded-md bg-muted text-foreground">
-																				Seed
-																			</span>
-																		)}
-																	</td>
-																)
-															})}
-														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Population</td>
 															{selectedMarkets.map(marketId => {
 																const seedMarket = seedMarkets.find(
@@ -257,7 +223,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">GDP per Capita</td>
 															{selectedMarkets.map(marketId => {
 																const seedMarket = seedMarkets.find(
@@ -272,23 +238,23 @@ export default function ComparePage() {
 														</tr>
 
 														{/* Risk Metrics */}
-														<tr className="border-b border-border/50 bg-muted/10">
+														<tr className="bg-secondary/20">
 															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Risk & Opportunity
 															</td>
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Risk Level</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
 																return (
 																	<td key={marketId} className="py-3 px-4 text-sm font-mono font-semibold">
-																		{marketStrategy?.strategy?.scenarioImpact.risk.toFixed(1) || 'N/A'}
+																		{marketStrategy?.isLoading ? <LoadingCell /> : marketStrategy?.strategy?.scenarioImpact.risk.toFixed(1) || 'N/A'}
 																	</td>
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Upside Potential</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -299,7 +265,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Cost Index</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -312,12 +278,12 @@ export default function ComparePage() {
 														</tr>
 
 														{/* Soft Scores */}
-														<tr className="border-b border-border/50 bg-muted/10">
+														<tr className="bg-secondary/20">
 															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Soft Scores
 															</td>
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Cultural Fit</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -328,7 +294,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Regulatory Friendliness</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -339,7 +305,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Media Potential</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -350,7 +316,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Sponsorship Appetite</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -361,7 +327,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Infrastructure Readiness</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -374,12 +340,12 @@ export default function ComparePage() {
 														</tr>
 
 														{/* Market Insights */}
-														<tr className="border-b border-border/50 bg-muted/10">
+														<tr className="bg-secondary/20">
 															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Market Insights
 															</td>
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Audience Size</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -391,7 +357,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Fitness Rate</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -403,7 +369,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Streaming Score</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -415,7 +381,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Sponsorship Value</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -427,7 +393,7 @@ export default function ComparePage() {
 																)
 															})}
 														</tr>
-														<tr className="border-b border-border/50">
+														<tr>
 															<td className="py-3 px-4 text-sm text-muted-foreground">Regulation Score</td>
 															{selectedMarkets.map(marketId => {
 																const marketStrategy = marketStrategies.find(m => m.marketId === marketId)
@@ -441,7 +407,7 @@ export default function ComparePage() {
 														</tr>
 
 														{/* Actions */}
-														<tr className="border-b border-border/50 bg-muted/10">
+														<tr className="bg-secondary/20">
 															<td className="py-3 px-4 text-sm font-medium text-foreground" colSpan={selectedMarkets.length + 1}>
 																Actions
 															</td>
@@ -461,23 +427,16 @@ export default function ComparePage() {
 													</tbody>
 												</table>
 											</div>
-											<div className="mt-6 p-4 bg-muted/50 rounded-lg">
-												<p className="text-xs text-muted-foreground">
-													All metrics are calculated using the Low Regulation scenario. Visit individual market pages to explore different scenarios.
-												</p>
-											</div>
-										</>
-									)}
-								</CardContent>
-							</Card>
+								</div>
+
 						) : (
-							<Card className="border-dashed">
-								<CardContent className="flex flex-col items-center justify-center py-16 text-center">
+							<div className="border-dashed border border-border bg-card/50 rounded-lg">
+								<div className="flex flex-col items-center justify-center py-16 text-center">
 									<p className="text-sm text-muted-foreground">
 										Click on markets above to start comparing
 									</p>
-								</CardContent>
-							</Card>
+								</div>
+							</div>
 						)}
 					</div>
 				</main>

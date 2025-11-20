@@ -72,7 +72,6 @@ export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent onClose={() => onOpenChange(false)}>
 				<DialogHeader>
-					<DialogTitle>Add Market</DialogTitle>
 					<DialogDescription>
 						Search for a country to add to your analysis
 					</DialogDescription>
@@ -119,16 +118,6 @@ export function AddMarketModal ({ open, onOpenChange }: AddMarketModalProps) {
 							</div>
 						)}
 					</div>
-
-					<DialogFooter>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => onOpenChange(false)}
-						>
-							Cancel
-						</Button>
-					</DialogFooter>
 				</div>
 			</DialogContent>
 		</Dialog>

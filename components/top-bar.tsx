@@ -17,7 +17,7 @@ export function TopBar({
 }: TopBarProps) {
 	return (
 		<div className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-			<div className="flex h-14 items-center justify-between px-6">
+			<div className="flex h-14 items-center justify-between px-2">
 				<div className="flex items-center gap-4">
 					{leftContent}
 				</div>

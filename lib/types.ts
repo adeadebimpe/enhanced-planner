@@ -57,10 +57,40 @@ export interface MarketInsights {
 	regulationScore: number // 0-100
 }
 
+export interface City {
+	name: string
+	latitude: number
+	longitude: number
+	population: number
+	advantages: string[]
+}
+
+export interface GeopoliticalAssessment {
+	stabilityScore: number // 0-10 scale
+	riskLevel: 'Low' | 'Medium' | 'High'
+	keyFactors: string[]
+	recommendations: string[]
+}
+
+export interface MarketAnalysis {
+	softScores: SoftScores
+	scenarioImpact: ScenarioImpact
+	marketInsights: MarketInsights
+	geopoliticalAssessment: GeopoliticalAssessment
+	bestCities: City[]
+	narrative: {
+		summary: string
+		reasonsToEnter: string[]
+		keyRisks: string[]
+	}
+}
+
 export interface StrategyResponse {
 	softScores: SoftScores
 	scenarioImpact: ScenarioImpact
 	marketInsights: MarketInsights
+	geopoliticalAssessment: GeopoliticalAssessment
+	bestCities: City[]
 	narrative: {
 		summary: string
 		reasonsToEnter: string[]

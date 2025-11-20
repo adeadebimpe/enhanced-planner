@@ -16,13 +16,19 @@ export function Sidebar () {
 
 	return (
 		<>
-			<div className="w-60 bg-background border-r border-border/50 h-screen sticky top-0 flex flex-col">
+			<div className="w-60 bg-background h-screen sticky top-0 flex flex-col">
 				{/* Header */}
-				<div className="px-8 h-14 border-b border-border/50 flex items-center">
-					<Link href="/" className="block">
-						<h1 className="text-sm font-medium tracking-wide">
-							Enhanced Games
-						</h1>
+				<div className="px-8 py-4 flex items-center gap-3">
+					<Link href="/" className="flex items-center gap-3">
+						<img
+							src="https://cdn.brandfetch.io/idU0M_KN8U/w/2000/h/2000/theme/dark/logo.png?c=1bxid64Mup7aczewSAYMX&t=1756346058451"
+							alt="Enhanced Games"
+							className="h-8 w-auto flex-shrink-0"
+						/>
+						<div className="flex flex-col">
+							<span className="text-xs font-semibold tracking-wide uppercase">Enhanced Games</span>
+							<span className="text-[10px] text-muted-foreground">Strategic planner</span>
+						</div>
 					</Link>
 				</div>
 
@@ -44,18 +50,11 @@ export function Sidebar () {
 											href={`/${market.id}`}
 											className={`block px-3 py-2.5 rounded-lg text-sm transition-all ${
 												isActive
-													? 'bg-primary/10 text-primary font-medium'
+													? 'bg-accent/50 text-foreground font-medium shadow-sm'
 													: 'hover:bg-accent/50 text-foreground/80 hover:text-foreground'
 											}`}
 										>
-											<div className="flex items-center justify-between">
-												<span>{market.name}</span>
-												{market.isCustom && (
-													<span className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">
-														Custom
-													</span>
-												)}
-											</div>
+											<span>{market.name}</span>
 										</Link>
 									)
 								})
