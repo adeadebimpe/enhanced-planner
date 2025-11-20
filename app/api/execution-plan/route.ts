@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { z } from 'zod'
 import type { MarketData, Scenario } from '@/lib/types'
 import { getExecutionPlanPrompt, SYSTEM_PROMPT } from '@/lib/prompts'
-
-function getOpenAIClient () {
-	const apiKey = process.env.OPENAI_API_KEY
-	if (!apiKey) {
-		throw new Error('OPENAI_API_KEY environment variable is not set')
-	}
-	return new OpenAI({ apiKey })
-}
-
-const executionPlanSchema = z.object({
-	executionPlan: z.object({
-		week1to2: z.string(),
-		week3to4: z.string(),
-		week5to6: z.string(),
-		week7to8: z.string(),
-		week9to12: z.string(),
-	}),
-})
+import { getOpenAIClient } from '@/lib/openai-client'
+import { executionPlanResponseSchema } from '@/lib/validation-schemas'
+import { normalizeExecutionPlan } from '@/lib/market-utils'
+import { OPENAI_MODEL, OPENAI_TEMPERATURE } from '@/lib/constants'
 
 export async function POST (req: NextRequest) {
 	try {
@@ -38,7 +23,7 @@ export async function POST (req: NextRequest) {
 
 		const openai = getOpenAIClient()
 		const completion = await openai.chat.completions.create({
-			model: 'gpt-4o',
+			model: OPENAI_MODEL,
 			messages: [
 				{
 					role: 'system',
@@ -46,7 +31,7 @@ export async function POST (req: NextRequest) {
 				},
 				{ role: 'user', content: prompt },
 			],
-			temperature: 0.7,
+			temperature: OPENAI_TEMPERATURE,
 			response_format: { type: 'json_object' },
 		})
 
@@ -64,20 +49,10 @@ export async function POST (req: NextRequest) {
 
 		const parsedResponse = JSON.parse(responseContent)
 
-		// Transform execution plan arrays or objects to strings if needed
-		if (parsedResponse.executionPlan) {
-			const plan = parsedResponse.executionPlan
-			Object.keys(plan).forEach(key => {
-				if (Array.isArray(plan[key])) {
-					plan[key] = plan[key].join(' ')
-				} else if (typeof plan[key] === 'object' && plan[key] !== null) {
-					// If it's an object, convert it to a formatted string
-					plan[key] = Object.values(plan[key]).join(' ')
-				}
-			})
-		}
+		// Normalize execution plan data
+		normalizeExecutionPlan(parsedResponse.executionPlan)
 
-		const validatedResponse = executionPlanSchema.parse(parsedResponse)
+		const validatedResponse = executionPlanResponseSchema.parse(parsedResponse)
 
 		return NextResponse.json(validatedResponse)
 	} catch (err) {

@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
-
-function getOpenAIClient() {
-	const apiKey = process.env.OPENAI_API_KEY
-	if (!apiKey) {
-		throw new Error('OPENAI_API_KEY environment variable is not set')
-	}
-	return new OpenAI({ apiKey })
-}
+import { getOpenAIClient } from '@/lib/openai-client'
+import { OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS_CHAT } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
 	try {
@@ -54,7 +47,7 @@ export async function POST(req: NextRequest) {
 
 		const openai = getOpenAIClient()
 		const completion = await openai.chat.completions.create({
-			model: 'gpt-4o',
+			model: OPENAI_MODEL,
 			messages: [
 				{
 					role: 'system',
@@ -63,8 +56,8 @@ export async function POST(req: NextRequest) {
 				},
 				{ role: 'user', content: contextPrompt },
 			],
-			temperature: 0.7,
-			max_tokens: 1000,
+			temperature: OPENAI_TEMPERATURE,
+			max_tokens: OPENAI_MAX_TOKENS_CHAT,
 		})
 
 		const answer = completion.choices[0]?.message?.content
